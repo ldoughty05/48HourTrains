@@ -27,6 +27,9 @@ class RoadRailIntersection(db.Model):
     car_width = db.Column(db.Double)
     train_velocity = db.Column(db.Double)
     train_block_time = db.Column(db.Integer)
+    car_velocity = db.Column(db.Double)
+
+
     # trains_on_this_rail = db.Column(db.Integer, secondary_key=True)
     # time_until_blocked = db.Column(db.Integer)
 
@@ -73,7 +76,8 @@ def handle_data_get(id:int):
             "num_cars": intersection.num_cars,
             "car_width": intersection.car_width,
             "train_velocity": intersection.train_velocity,
-            "train_block_time": intersection.train_block_time
+            "train_block_time": intersection.train_block_time,
+            "car_velocity": intersection.car_velocity
         })
     except Exception as e:
         return jsonify({"error": f"502 Couldn't get intersection rows.", "details": str(e)}), 502
@@ -82,7 +86,7 @@ def handle_data_get(id:int):
 @app.route("/")
 def index():
     res = requests.get("http://127.0.0.1:5000/data/1").json()
-    velocity = res.get("train_velocity", "Unknown")  # Handle case where key might not exist
+    velocity = res.get("car_velocity", "Unknown")  # Handle case where key might not exist
     return f"Toy Car Velocity {velocity}"
 
 @app.route("/data", methods=["POST", "PUT"])

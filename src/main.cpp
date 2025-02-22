@@ -30,7 +30,10 @@ The (UNO) circuit:
 SoftwareSerial mySerial(10, 11);      // Uno RX (TFMINI TX), Uno TX (TFMINI RX)
 TFMini tfmini;
 
-void sendDataOverSerial(uint8_t locationId, uint16_t distance, uint16_t signalStrength, bool isBlocked, uint16_t trainVelocity, unsigned long elapsedBlockTime, unsigned long timestamp){
+void sendDataOverSerial(uint8_t locationId, uint16_t distance, 
+    uint16_t signalStrength, bool isBlocked, 
+    uint16_t trainVelocity, uint16_t carVelocity,
+    unsigned long elapsedBlockTime, unsigned long timestamp){
   Serial.print("{\"location_id\": ");
   Serial.print(locationId);
   Serial.print(", \"distance\": ");
@@ -41,6 +44,8 @@ void sendDataOverSerial(uint8_t locationId, uint16_t distance, uint16_t signalSt
   Serial.print(isBlocked);
   Serial.print(", \"train_velocity\": ");
   Serial.print(trainVelocity);
+  Serial.print(", \"car_velocity\": ");
+  Serial.print(carVelocity);
   Serial.print(", \"train_block_time\": "); // not adjusted for if the train changes speed.
   Serial.print(elapsedBlockTime);
   Serial.print(", \"timestamp\": ");
@@ -70,10 +75,12 @@ bool getIsBlocked(uint16_t lidar_distance){
   return lidar_distance <= SENSOR_DISTANCE_FROM_TRAIN;
 }
 
-void updateHoldTime(int buttonState, uint8_t* holdValue, unsigned long* leadingEdgeTime, unsigned long* holdTime){
+void updateHoldTime(int buttonState, uint8_t* holdValue, unsigned long* leadingEdgeTime, unsigned long* carPhase, unsigned long* holdTime){
   if (buttonState == *holdValue){
     *holdTime = millis() - *leadingEdgeTime;
   } else { // value changed
+    if(*holdValue == BLOCKED) // Was blocked and just now became unblocked.
+      *carPhase = *holdTime;
     *holdValue = buttonState;
     *leadingEdgeTime = millis();
     *holdTime = 0;
@@ -98,10 +105,14 @@ void updateTrainIsPresent(uint8_t holdValue, unsigned long holdTime, uint8_t* nu
   }
 }
 
-void updateVelocity(uint8_t numCars, unsigned long elapsedBlockTime, uint16_t* trainVelocity){
+void updateTrainVelocity(uint8_t numCars, unsigned long elapsedBlockTime, uint16_t* trainVelocity){
   // An alternative (and probably better) implementation would get the velocity for each cart.
   // This implementation tries to take an average for the whole train, but it does not currently take the gaps into account.
   *trainVelocity = numCars * CAR_LENGTH / elapsedBlockTime;
+}
+
+void updateCarVelocity(unsigned long carPhase, uint16_t* carVelocity){
+  *carVelocity = CAR_LENGTH / carPhase; 
 }
 
 
@@ -109,20 +120,24 @@ void loop() {
   static uint8_t holdValue = 0;
   static unsigned long leadingEdgeTime = 0; // the time stamp for whenever blocked first changed to BLOCKED or NOT_BLOCKED.
   static unsigned long holdTime = 0; // how long the reading has stayed either BLOCKED or NOT_BLOCKED.
+  static unsigned long carPhase = 0; // how long the most recent car blocked the sensor.
   static bool trainIsPresent = 0;
   static uint8_t numCars = 0;
   static unsigned long elapsedBlockTime = 0;
   static unsigned long timeTrainFirstFound = 0;
   static uint16_t trainVelocity = 0;
+  static uint16_t carVelocity = 0;
+
   uint16_t strength = tfmini.getRecentSignalStrength();
   uint16_t dist = tfmini.getDistance();
   
   bool isBlocked = getIsBlocked(dist);
 
-  updateHoldTime(isBlocked, &holdValue, &leadingEdgeTime, &holdTime);
+  updateHoldTime(isBlocked, &holdValue, &leadingEdgeTime, &carPhase, &holdTime);
   updateTrainIsPresent(holdValue, holdTime, &numCars, &timeTrainFirstFound, &elapsedBlockTime, &trainIsPresent);
-  updateVelocity(numCars, elapsedBlockTime, &trainVelocity);
-  sendDataOverSerial(1, dist, strength, isBlocked, trainVelocity, elapsedBlockTime, millis());
+  updateCarVelocity(carPhase, &carVelocity);
+  updateTrainVelocity(numCars, elapsedBlockTime, &trainVelocity);
+  sendDataOverSerial(1, dist, strength, isBlocked, trainVelocity, carVelocity, elapsedBlockTime, millis());
 
   delay(100); 
 }
