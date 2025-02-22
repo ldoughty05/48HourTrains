@@ -7,6 +7,7 @@ $ git clone git@github.com:ldoughty05/48HourTrains.git
 
 Activate virtual environment
 ```{bash}
+$ python -m venv .venv
 $ .\env\Scripts\Activate
 ```
 
