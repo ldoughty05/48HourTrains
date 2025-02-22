@@ -105,15 +105,20 @@ void updateTrainIsPresent(uint8_t holdValue, unsigned long holdTime, uint8_t* nu
   }
 }
 
-void updateTrainVelocity(uint8_t numCars, unsigned long elapsedBlockTime, uint16_t* trainVelocity){
+void updateTrainVelocity(uint8_t numCars, unsigned long elapsedBlockTime, double* trainVelocity){
   // An alternative (and probably better) implementation would get the velocity for each cart.
   // This implementation tries to take an average for the whole train, but it does not currently take the gaps into account.
   *trainVelocity = numCars * CAR_LENGTH / elapsedBlockTime;
 }
 
-void updateCarVelocity(unsigned long carPhase, uint16_t* carVelocity){
-  *carVelocity = CAR_LENGTH / carPhase; 
+void updateCarVelocity(unsigned long carPhase, double* carVelocity){ 
+  if (carPhase > 0) {
+    *carVelocity = CAR_LENGTH / ((float)carPhase);
+  } else {
+    *carVelocity = 0;
+  }
 }
+
 
 
 void loop() {
@@ -125,8 +130,8 @@ void loop() {
   static uint8_t numCars = 0;
   static unsigned long elapsedBlockTime = 0;
   static unsigned long timeTrainFirstFound = 0;
-  static uint16_t trainVelocity = 0;
-  static uint16_t carVelocity = 0;
+  static double trainVelocity = 0;
+  static double carVelocity = 0;
 
   uint16_t strength = tfmini.getRecentSignalStrength();
   uint16_t dist = tfmini.getDistance();

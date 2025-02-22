@@ -28,6 +28,7 @@ class RoadRailIntersection(db.Model):
     train_velocity = db.Column(db.Double)
     train_block_time = db.Column(db.Integer)
     car_velocity = db.Column(db.Double)
+    last_update_epoch = db.Column(db.Integer)
 
 
     # trains_on_this_rail = db.Column(db.Integer, secondary_key=True)
@@ -48,16 +49,32 @@ def initialize_database():
 
 def handle_data_put():
     try:
-        id = request.json['location_id']
-        intersection = RoadRailIntersection.query.get_or_404(id)
+        # Extract 'location_id' from the JSON request
+        location_id = request.json.get('location_id')
+
+        if location_id is None:
+            return jsonify({"error": "400 Bad Request", "details": "Missing 'location_id' in request body."}), 400
+
+        # Query the database using 'location_id' as the primary key (id)
+        intersection = RoadRailIntersection.query.get(location_id)
+
+        if intersection is None:
+            return jsonify({"error": "404 Not Found", "details": f"No intersection found for location_id {location_id}"}), 404
+
+        # Update the intersection's attributes with new values from the request
+        intersection.car_velocity = request.json.get('car_velocity', intersection.car_velocity)
+        intersection.train_block_time = request.json.get('train_block_time', intersection.train_block_time)
+        intersection.car_width = 4.0
+        intersection.last_update_epoch = request.json.get('timestamp', intersection.last_update_epoch)
+
+        # Commit the changes to the database
+        db.session.commit()
+
+        return jsonify({"message": "200 OK", "details": "Intersection updated successfully."}), 200
+
     except Exception as e:
-        return jsonify({"error": f"504 Couldn't find intersection in database.", "details": str(e)}), 504
-    try:
-        intersection.velocity = request.json['train_velocity']
-        intersection.train_block_time = request.json['train_block_time']
-        return "200 OK"
-    except Exception as e:
-        return jsonify({"error": f"501 Couldn't update intersection rows.", "details": str(e)}), 501
+        return jsonify({"error": "500 Internal Server Error", "details": str(e)}), 500
+
         
 
 def handle_data_post():
@@ -77,17 +94,19 @@ def handle_data_get(id:int):
             "car_width": intersection.car_width,
             "train_velocity": intersection.train_velocity,
             "train_block_time": intersection.train_block_time,
-            "car_velocity": intersection.car_velocity
+            "car_velocity": intersection.car_velocity,
+            "last_update_epoch": intersection.last_update_epoch,
         })
     except Exception as e:
         return jsonify({"error": f"502 Couldn't get intersection rows.", "details": str(e)}), 502
-    
+
 
 @app.route("/")
 def index():
     res = requests.get("http://127.0.0.1:5000/data/1").json()
-    velocity = res.get("car_velocity", "Unknown")  # Handle case where key might not exist
-    return f"Toy Car Velocity {velocity}"
+    print(res)
+    # intersection = res.get("car_velocity", "Unknown")  # Handle case where key might not exist
+    return render_template('index.html', intersection=res)
 
 @app.route("/data", methods=["POST", "PUT"])
 def data():

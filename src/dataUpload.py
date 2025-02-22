@@ -44,5 +44,3 @@ if __name__ == "__main__":
         print(f"Server Response: {response.text}\n")
         print(f"=========================================\n")
 
-
-
