@@ -1,0 +1,8 @@
+.panel {
+  padding: 0.5em;
+  border-radius: 15px;
+}
+
+.panel.important {
+  background-color: #d4d4d4;
+}

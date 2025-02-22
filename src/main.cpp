@@ -145,7 +145,7 @@ void loop() {
   static uint8_t numCars = 0;
   static unsigned long elapsedBlockTime = 0;
   static unsigned long timeTrainFirstFound = 0;
-  static double trainVelocity = 0;
+  // static double trainVelocity = 0;
   static double carVelocity = 0;
 
   uint16_t strength = tfmini.getRecentSignalStrength();

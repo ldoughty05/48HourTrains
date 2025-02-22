@@ -3,29 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{url_for('static', filename='styles.css')}}"/>
   <title>SafeGuard Solutions</title>
 </head>
 <body>
   <image src="../static/Logo.png" />
   <h1>Location # {{intersection.id}}</h1>
-  <h2>Train Car Velocity:</h2>
-  <p id="carVelocity">{{ intersection.car_velocity }} in/ms</p>
-
-  <h2>Hold Time:</h2>
-  <p id="holdTime">{{ intersection.hold_time }} ms</p>
-
-  <h2>Car Block Time:</h2>
-  <p id="carPhase">{{ intersection.car_phase }} ms</p>
-
-  <h2>Train Car Width:</h2>
-  <p id="carWidth">{{ intersection.car_width }} in</p>
-
-  <h2>Train Block Time:</h2>
-  <p id="trainBlockTime">{{ intersection.train_block_time }} ms</p>
-
-  <h2>Last Update Epoch</h2>
-  <p id="lastUpdateEpoch">{{ intersection.last_update_epoch }}</p>
-
+  <div class="panel important">
+    <h2>Train Car Velocity:</h2>
+    <p id="carVelocity">{{ intersection.car_velocity }} in/ms</p>
+  </div>
+  <div class="panel">
+    <h2>Hold Time:</h2>
+    <p id="holdTime">{{ intersection.hold_time }} ms</p>
+  
+    <h2>Car Block Time:</h2>
+    <p id="carPhase">{{ intersection.car_phase }} ms</p>
+  
+    <h2>Train Car Width:</h2>
+    <p id="carWidth">{{ intersection.car_width }} in</p>
+  
+    <h2>Train Block Time:</h2>
+    <p id="trainBlockTime">{{ intersection.train_block_time }} ms</p>
+  
+    <h2>Last Update Epoch</h2>
+    <p id="lastUpdateEpoch">{{ intersection.last_update_epoch }}</p>
+  </div>
+  </body>
+  
   <script>
     async function fetchLatestData() {
       try {
@@ -52,7 +57,6 @@
     // Fetch new data every second
     setInterval(fetchLatestData, 500);
   </script>
-  </body>
 </html>
 
   
