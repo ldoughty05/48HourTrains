@@ -30,7 +30,7 @@ The (UNO) circuit:
 SoftwareSerial mySerial(10, 11);      // Uno RX (TFMINI TX), Uno TX (TFMINI RX)
 TFMini tfmini;
 
-void sendDataOverSerial(uint8_t locationId, uint16_t distance, uint16_t signalStrength, bool isBlocked, uint16_t trainVelocity, unsigned long timestamp){
+void sendDataOverSerial(uint8_t locationId, uint16_t distance, uint16_t signalStrength, bool isBlocked, uint16_t trainVelocity, unsigned long elapsedBlockTime, unsigned long timestamp){
   Serial.print("{\"location_id\": ");
   Serial.print(locationId);
   Serial.print(", \"distance\": ");
@@ -41,6 +41,8 @@ void sendDataOverSerial(uint8_t locationId, uint16_t distance, uint16_t signalSt
   Serial.print(isBlocked);
   Serial.print(", \"train_velocity\": ");
   Serial.print(trainVelocity);
+  Serial.print(", \"train_block_time\": "); // not adjusted for if the train changes speed.
+  Serial.print(elapsedBlockTime);
   Serial.print(", \"timestamp\": ");
   Serial.print(timestamp);
   Serial.println("}");
@@ -114,12 +116,13 @@ void loop() {
   static uint16_t trainVelocity = 0;
   uint16_t strength = tfmini.getRecentSignalStrength();
   uint16_t dist = tfmini.getDistance();
+  
   bool isBlocked = getIsBlocked(dist);
 
   updateHoldTime(isBlocked, &holdValue, &leadingEdgeTime, &holdTime);
   updateTrainIsPresent(holdValue, holdTime, &numCars, &timeTrainFirstFound, &elapsedBlockTime, &trainIsPresent);
   updateVelocity(numCars, elapsedBlockTime, &trainVelocity);
-  sendDataOverSerial(5, dist, strength, isBlocked, trainVelocity, millis());
+  sendDataOverSerial(1, dist, strength, isBlocked, trainVelocity, elapsedBlockTime, millis());
 
   delay(100); 
 }
