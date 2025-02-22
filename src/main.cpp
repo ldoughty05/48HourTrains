@@ -31,9 +31,10 @@ SoftwareSerial mySerial(10, 11);      // Uno RX (TFMINI TX), Uno TX (TFMINI RX)
 TFMini tfmini;
 
 void sendDataOverSerial(uint8_t locationId, uint16_t distance, 
-    uint16_t signalStrength, bool isBlocked, 
-    uint16_t trainVelocity, uint16_t carVelocity,
-    unsigned long elapsedBlockTime, unsigned long timestamp){
+    uint16_t signalStrength, bool isBlocked,
+    double carVelocity,
+    unsigned long elapsedBlockTime, unsigned long holdTime,
+    unsigned long carPhase, unsigned long timestamp){
   Serial.print("{\"location_id\": ");
   Serial.print(locationId);
   Serial.print(", \"distance\": ");
@@ -42,12 +43,14 @@ void sendDataOverSerial(uint8_t locationId, uint16_t distance,
   Serial.print(signalStrength);
   Serial.print(", \"is_blocked\": ");
   Serial.print(isBlocked);
-  Serial.print(", \"train_velocity\": ");
-  Serial.print(trainVelocity);
   Serial.print(", \"car_velocity\": ");
-  Serial.print(carVelocity);
+  Serial.print(carVelocity, 3);
   Serial.print(", \"train_block_time\": "); // not adjusted for if the train changes speed.
   Serial.print(elapsedBlockTime);
+  Serial.print(", \"hold_time\": ");
+  Serial.print(holdTime);
+  Serial.print(", \"car_phase\": ");
+  Serial.print(carPhase);
   Serial.print(", \"timestamp\": ");
   Serial.print(timestamp);
   Serial.println("}");
@@ -76,14 +79,20 @@ bool getIsBlocked(uint16_t lidar_distance){
 }
 
 void updateHoldTime(int buttonState, uint8_t* holdValue, unsigned long* leadingEdgeTime, unsigned long* carPhase, unsigned long* holdTime){
-  if (buttonState == *holdValue){
+  if (buttonState == *holdValue){ // holding
     *holdTime = millis() - *leadingEdgeTime;
   } else { // value changed
     if(*holdValue == BLOCKED) // Was blocked and just now became unblocked.
-      *carPhase = *holdTime;
+      *carPhase = *holdTime; 
     *holdValue = buttonState;
     *leadingEdgeTime = millis();
     *holdTime = 0;
+  }
+}
+
+void updateCarPhase(uint8_t holdValue, unsigned long holdTime, unsigned long *carPhase){
+  if(holdValue == NOT_BLOCKED){
+    *carPhase = holdTime; // this will give incorrect velocity values because this always starts tiny and gets bigger.
   }
 }
 
@@ -113,7 +122,13 @@ void updateTrainVelocity(uint8_t numCars, unsigned long elapsedBlockTime, double
 
 void updateCarVelocity(unsigned long carPhase, double* carVelocity){ 
   if (carPhase > 0) {
-    *carVelocity = CAR_LENGTH / ((float)carPhase);
+    *carVelocity = CAR_LENGTH / ((double)carPhase / 1000);
+    Serial.println("*carVelocity = CAR_LENGTH / ((double)carPhase);");
+    Serial.print(*carVelocity, 6);
+    Serial.print(" = ");
+    Serial.print(CAR_LENGTH);
+    Serial.print(" / ");
+    Serial.println((double)carPhase);
   } else {
     *carVelocity = 0;
   }
@@ -139,10 +154,11 @@ void loop() {
   bool isBlocked = getIsBlocked(dist);
 
   updateHoldTime(isBlocked, &holdValue, &leadingEdgeTime, &carPhase, &holdTime);
-  updateTrainIsPresent(holdValue, holdTime, &numCars, &timeTrainFirstFound, &elapsedBlockTime, &trainIsPresent);
+  updateCarPhase(holdValue, holdTime, &carPhase);
   updateCarVelocity(carPhase, &carVelocity);
-  updateTrainVelocity(numCars, elapsedBlockTime, &trainVelocity);
-  sendDataOverSerial(1, dist, strength, isBlocked, trainVelocity, carVelocity, elapsedBlockTime, millis());
+  updateTrainIsPresent(holdValue, holdTime, &numCars, &timeTrainFirstFound, &elapsedBlockTime, &trainIsPresent);
+  // updateTrainVelocity(numCars, elapsedBlockTime, &trainVelocity);
+  sendDataOverSerial(1, dist, strength, isBlocked, carVelocity, elapsedBlockTime, holdTime, carPhase, millis());
 
   delay(100); 
 }

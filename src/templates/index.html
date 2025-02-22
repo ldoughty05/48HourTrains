@@ -11,6 +11,12 @@
   <h2>Train Car Velocity:</h2>
   <p id="carVelocity">{{ intersection.car_velocity }} in/ms</p>
 
+  <h2>Hold Time:</h2>
+  <p id="holdTime">{{ intersection.hold_time }} ms</p>
+
+  <h2>Car Block Time:</h2>
+  <p id="carPhase">{{ intersection.car_phase }} ms</p>
+
   <h2>Train Car Width:</h2>
   <p id="carWidth">{{ intersection.car_width }} in</p>
 
@@ -32,6 +38,8 @@
 
         // Update the DOM with the latest data
         document.getElementById("carVelocity").innerText = data.car_velocity + " in/ms";
+        document.getElementById("holdTime").innerText = data.hold_time + " ms";
+        document.getElementById("carPhase").innerText = data.car_phase + " ms";
         document.getElementById("carWidth").innerText = data.car_width + " in";
         document.getElementById("trainBlockTime").innerText = data.train_block_time + " ms";
         document.getElementById("lastUpdateEpoch").innerText = data.last_update_epoch;

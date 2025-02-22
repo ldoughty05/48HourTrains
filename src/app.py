@@ -25,9 +25,11 @@ class RoadRailIntersection(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     num_cars = db.Column(db.Integer)
     car_width = db.Column(db.Double)
-    train_velocity = db.Column(db.Double)
+    # train_velocity = db.Column(db.Double)
     train_block_time = db.Column(db.Integer)
     car_velocity = db.Column(db.Double)
+    hold_time = db.Column(db.Integer)
+    car_phase = db.Column(db.Integer)
     last_update_epoch = db.Column(db.Integer)
 
 
@@ -63,8 +65,10 @@ def handle_data_put():
 
         # Update the intersection's attributes with new values from the request
         intersection.car_velocity = request.json.get('car_velocity', intersection.car_velocity)
-        intersection.train_block_time = request.json.get('train_block_time', intersection.train_block_time)
+        intersection.hold_time = request.json.get('hold_time', intersection.hold_time)
+        intersection.car_phase = request.json.get('car_phase', intersection.car_phase)
         intersection.car_width = 4.0
+        intersection.train_block_time = request.json.get('train_block_time', intersection.train_block_time)
         intersection.last_update_epoch = request.json.get('timestamp', intersection.last_update_epoch)
 
         # Commit the changes to the database
@@ -92,9 +96,10 @@ def handle_data_get(id:int):
             "id": intersection.id,
             "num_cars": intersection.num_cars,
             "car_width": intersection.car_width,
-            "train_velocity": intersection.train_velocity,
             "train_block_time": intersection.train_block_time,
             "car_velocity": intersection.car_velocity,
+            "hold_time": intersection.hold_time,
+            "car_phase": intersection.car_phase,
             "last_update_epoch": intersection.last_update_epoch,
         })
     except Exception as e:
