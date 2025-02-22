@@ -79,7 +79,6 @@ def handle_data_put():
         intersection.time_since_train_first_spotted = request.json.get('time_since_train_first_spotted', intersection.time_since_train_first_spotted)/1000 # seconds
         intersection.distance_to_intersection = START_DISTANCE - (intersection.car_velocity * intersection.time_since_train_first_spotted)
         intersection.time_until_obstruction = (1/intersection.car_velocity) * intersection.distance_to_intersection
-        print(f"TUD: {intersection.time_until_obstruction} = 1/{intersection.car_velocity} * {intersection.distance_to_intersection}")
         intersection.expected_obstruction_time = TRAIN_LENGTH * intersection.car_velocity
         # Commit the changes to the database
         db.session.commit()

@@ -33,7 +33,7 @@ if __name__ == "__main__":
   ser = waitForSerialConnection()
   while True:
     if ser.in_waiting > 0:
-      serial_data_string = ser.readline().decode().strip()
+      serial_data_string = ser.readline().decode('utf-8', errors='ignore').strip()
       # Check that the serial is in the shape of a json.
       data_dict = get_dict_from_serial(serial_data_string)
       if (data_dict):
