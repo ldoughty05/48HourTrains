@@ -3,11 +3,9 @@ import requests
 import json
 import html
 
-SERIAL_PORT = "COM4"
-BAUD_RATE = 9600 #115200
 WEB_SERVER_URL = "http://127.0.0.1:5000/data"
 
-ser = serial.Serial(SERIAL_PORT, BAUD_RATE)
+ser = serial.Serial("/dev/ttyACM0", baudrate = 115200, timeout=3)
 
 
 
