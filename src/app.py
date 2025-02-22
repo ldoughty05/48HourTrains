@@ -31,6 +31,10 @@ class RoadRailIntersection(db.Model):
     hold_time = db.Column(db.Integer)
     car_phase = db.Column(db.Integer)
     last_update_epoch = db.Column(db.Integer)
+    time_since_train_first_spotted = db.Column(db.Integer)
+    distance_to_intersection = db.Column(db.Double)
+    time_until_obstruction = db.Column(db.Double)
+    expected_obstruction_time = db.Column(db.Integer)
 
 
     # trains_on_this_rail = db.Column(db.Integer, secondary_key=True)
@@ -38,6 +42,7 @@ class RoadRailIntersection(db.Model):
 
     def __repr__(self) -> str:
         return f"RoadRailIntersection {self.id}"
+
     
 def initialize_database():
     db.create_all()
@@ -48,7 +53,8 @@ def initialize_database():
         db.session.add(intersection001)
         db.session.commit()
 
-
+START_DISTANCE = 24 #inches
+TRAIN_LENGTH = 9 # inches
 def handle_data_put():
     try:
         # Extract 'location_id' from the JSON request
@@ -70,7 +76,11 @@ def handle_data_put():
         intersection.car_width = 4.0
         intersection.train_block_time = request.json.get('train_block_time', intersection.train_block_time)
         intersection.last_update_epoch = request.json.get('timestamp', intersection.last_update_epoch)
-
+        intersection.time_since_train_first_spotted = request.json.get('time_since_train_first_spotted', intersection.time_since_train_first_spotted)/1000 # seconds
+        intersection.distance_to_intersection = START_DISTANCE - (intersection.car_velocity * intersection.time_since_train_first_spotted)
+        intersection.time_until_obstruction = (1/intersection.car_velocity) * intersection.distance_to_intersection
+        print(f"TUD: {intersection.time_until_obstruction} = 1/{intersection.car_velocity} * {intersection.distance_to_intersection}")
+        intersection.expected_obstruction_time = TRAIN_LENGTH * intersection.car_velocity
         # Commit the changes to the database
         db.session.commit()
 
@@ -101,6 +111,9 @@ def handle_data_get(id:int):
             "hold_time": intersection.hold_time,
             "car_phase": intersection.car_phase,
             "last_update_epoch": intersection.last_update_epoch,
+            "distance_to_intersection": intersection.distance_to_intersection,
+            "time_until_obstruction": intersection.time_until_obstruction,
+            "expected_obstruction_time": intersection.expected_obstruction_time,
         })
     except Exception as e:
         return jsonify({"error": f"502 Couldn't get intersection rows.", "details": str(e)}), 502

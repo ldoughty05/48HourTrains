@@ -12,7 +12,12 @@
   <div class="panel important">
     <h2>Train Car Velocity:</h2>
     <p id="carVelocity">{{ intersection.car_velocity }} in/ms</p>
+    <h2>Time Until Obstruction:</h2>
+    <p id="timeUntilObstruction">{{ intersection.time_until_obstruction }} ms</p>
+    <h2>Expected Obstruction Duration:</h2>
+    <p id="expectedObstructionDuration">{{ intersection.expected_obstruction_time }} ms</p>
   </div>
+
   <div class="panel">
     <h2>Hold Time:</h2>
     <p id="holdTime">{{ intersection.hold_time }} ms</p>
@@ -30,7 +35,7 @@
     <p id="lastUpdateEpoch">{{ intersection.last_update_epoch }}</p>
   </div>
   </body>
-  
+
   <script>
     async function fetchLatestData() {
       try {
@@ -42,12 +47,15 @@
         const data = await response.json();
 
         // Update the DOM with the latest data
-        document.getElementById("carVelocity").innerText = data.car_velocity + " in/ms";
+        document.getElementById("carVelocity").innerText = data.car_velocity + " in/s";
         document.getElementById("holdTime").innerText = data.hold_time + " ms";
         document.getElementById("carPhase").innerText = data.car_phase + " ms";
         document.getElementById("carWidth").innerText = data.car_width + " in";
         document.getElementById("trainBlockTime").innerText = data.train_block_time + " ms";
         document.getElementById("lastUpdateEpoch").innerText = data.last_update_epoch;
+        document.getElementById("timeUntilObstruction").innerText = data.time_until_obstruction + " ms";
+        document.getElementById("expectedObstructionDuration").innerText = data.expected_obstruction_time + " ms";
+
 
       } catch (error) {
         console.error("Error fetching latest data:", error);

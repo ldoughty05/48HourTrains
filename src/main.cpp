@@ -32,9 +32,9 @@ TFMini tfmini;
 
 void sendDataOverSerial(uint8_t locationId, uint16_t distance, 
     uint16_t signalStrength, bool isBlocked,
-    double carVelocity,
-    unsigned long elapsedBlockTime, unsigned long holdTime,
-    unsigned long carPhase, unsigned long timestamp){
+    double carVelocity, unsigned long elapsedBlockTime, 
+    unsigned long holdTime, unsigned long carPhase, 
+    unsigned long timeTrainFirstFound, unsigned long timestamp){
   Serial.print("{\"location_id\": ");
   Serial.print(locationId);
   Serial.print(", \"distance\": ");
@@ -51,6 +51,8 @@ void sendDataOverSerial(uint8_t locationId, uint16_t distance,
   Serial.print(holdTime);
   Serial.print(", \"car_phase\": ");
   Serial.print(carPhase);
+  Serial.print(", \"time_since_train_first_spotted\": ");
+  Serial.print(millis() - timeTrainFirstFound);
   Serial.print(", \"timestamp\": ");
   Serial.print(timestamp);
   Serial.println("}");
@@ -63,15 +65,12 @@ void setup() {
   // wait for serial port to connect. Needed for native USB port only
   while (!Serial);
      
-  Serial.println ("Initializing...");
-
   // Step 2: Initialize the data rate for the SoftwareSerial port
   mySerial.begin(TFMINI_BAUDRATE); //this is also 115200bd
 
   // Step 3: Initialize the TF Mini sensor
   tfmini.begin(&mySerial);  
   delay(10);  
-  Serial.println ("Ready.");
 }
 
 bool getIsBlocked(uint16_t lidar_distance){
@@ -123,12 +122,6 @@ void updateTrainVelocity(uint8_t numCars, unsigned long elapsedBlockTime, double
 void updateCarVelocity(unsigned long carPhase, double* carVelocity){ 
   if (carPhase > 0) {
     *carVelocity = CAR_LENGTH / ((double)carPhase / 1000);
-    Serial.println("*carVelocity = CAR_LENGTH / ((double)carPhase);");
-    Serial.print(*carVelocity, 6);
-    Serial.print(" = ");
-    Serial.print(CAR_LENGTH);
-    Serial.print(" / ");
-    Serial.println((double)carPhase);
   } else {
     *carVelocity = 0;
   }
@@ -146,7 +139,7 @@ void loop() {
   static unsigned long elapsedBlockTime = 0;
   static unsigned long timeTrainFirstFound = 0;
   // static double trainVelocity = 0;
-  static double carVelocity = 0;
+  static double carVelocity = 0; // in/s
 
   uint16_t strength = tfmini.getRecentSignalStrength();
   uint16_t dist = tfmini.getDistance();
@@ -158,7 +151,7 @@ void loop() {
   updateCarVelocity(carPhase, &carVelocity);
   updateTrainIsPresent(holdValue, holdTime, &numCars, &timeTrainFirstFound, &elapsedBlockTime, &trainIsPresent);
   // updateTrainVelocity(numCars, elapsedBlockTime, &trainVelocity);
-  sendDataOverSerial(1, dist, strength, isBlocked, carVelocity, elapsedBlockTime, holdTime, carPhase, millis());
+  sendDataOverSerial(1, dist, strength, isBlocked, carVelocity, elapsedBlockTime, holdTime, carPhase, timeTrainFirstFound, millis());
 
   delay(100); 
 }

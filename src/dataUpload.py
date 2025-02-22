@@ -9,8 +9,6 @@ PORT = "COM7" #"/dev/ttyACM0"
 WEB_SERVER_URL = "http://127.0.0.1:5000/data"
 
 
-
-
 def get_dict_from_serial(serial_data_string):
   try:
     print(f"Received Serial String: {serial_data_string}\n")
