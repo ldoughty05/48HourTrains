@@ -13,22 +13,22 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 db = SQLAlchemy(app)
 
-# class Train(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     num_cars = db.Column(db.Integer)
-#     car_width = db.Column(db.Double)
-#     velocity = db.Column(db.Double)
-#     # direction = db.Column(db.Integer)
-#     # last_recorded_intersection_id = db.Column(db.Integer, secondary_key=True)
+class Train(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    num_cars = db.Column(db.Integer)
+    car_width = db.Column(db.Double)
+    velocity = db.Column(db.Double)
+    # direction = db.Column(db.Integer)
+    # last_recorded_intersection_id = db.Column(db.Integer, secondary_key=True)
 
-# class RoadRailIntersection(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     trains_on_this_rail = db.Column(db.Array, secondary_key=True)
-#     time_until_blocked = db.Column(db.Integer)
-#     elapsed_blocked_time = db.Column(db.Integer)
+class RoadRailIntersection(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    # trains_on_this_rail = db.Column(db.Integer, secondary_key=True)
+    # time_until_blocked = db.Column(db.Integer)
+    elapsed_blocked_time = db.Column(db.Integer)
 
-#     def __repr__(self) -> str:
-#         return f"RoadRailIntersection {self.id}"
+    def __repr__(self) -> str:
+        return f"RoadRailIntersection {self.id}"
 
 @app.route("/")
 def index():
